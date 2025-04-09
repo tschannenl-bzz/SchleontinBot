@@ -94,10 +94,8 @@ class Message:
         :return: None
         """
         try:
-            # Should be ready to read
             data = self._socket.recv(4096)
         except BlockingIOError:
-            # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
         else:
             if data:
@@ -144,14 +142,11 @@ class Message:
         if self._send_buffer:
             print(f'Sending {self._send_buffer!r} to {self._ipaddr}')
             try:
-                # Should be ready to write
                 sent = self._socket.send(self._send_buffer)
             except BlockingIOError:
-                # Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
                 self._send_buffer = self._send_buffer[sent:]
-                # Close when the buffer is drained. The response has been sent.
                 if type(self).__name__ == 'ServerMessage' and \
                         sent and \
                         not self._send_buffer:
@@ -234,7 +229,6 @@ class Message:
         except OSError as e:
             print(f'Error: socket.close() exception for {self._ipaddr}: {e!r}')
         finally:
-            # Delete reference to socket object for garbage collection
             self._socket = None
 
     @property
