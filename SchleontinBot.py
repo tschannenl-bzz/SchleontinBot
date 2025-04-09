@@ -626,16 +626,6 @@ def main():
     play.start()
     open_port(bot, message.response, services)
 
-    # register the bot with the clowder => you get a port number
-    # open a socket with the port number
-    # listen for incoming connections from the arena
-
-    # analyse the incoming connections
-    # call the relevant bot method depending on the action
-    # send the response back to the arena
-
-    # close the socket
-
 def swish_tail():
     try:
         while True:
