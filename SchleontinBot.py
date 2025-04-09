@@ -659,7 +659,6 @@ def open_port(bot, port, services):
     sel = selectors.DefaultSelector()
 
     lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Avoid bind() exception: OSError: [Errno 48] Address already in use
     lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     lsock.bind((IPAddr, int(port)))
     lsock.listen()
@@ -743,7 +742,6 @@ def send_request(content):
                         f'{traceback.format_exc()}'
                     )
                     message.close()
-            # Check for a socket being monitored to continue.
             if not sel.get_map():
                 break
     except KeyboardInterrupt:
