@@ -428,7 +428,6 @@ class ClientMessage(Message):
 
         if self._request_queued:
             if not self._send_buffer:
-                # Set selector to listen for read events, we're done writing.
                 self.set_selector_events_mask('r')
 
     def _queue_request(self):
@@ -478,7 +477,6 @@ class ClientMessage(Message):
                 f'response from {self._ipaddr}'
             )
             self._process_response_binary_content()
-        # Close when response has been processed
         self._close()
 
 class SchleontinBot:
@@ -550,7 +548,6 @@ class SchleontinKitten:
                 if card.card_type == CardType.SHUFFLE:
                     return card
 
-        # 3. Wenn ich nichts über das Deck weiß, aber noch see_the_future habe, nutze es früh
         if not self.top_three and self._has_card(CardType.SEE_THE_FUTURE):
             return self._play_card(CardType.SEE_THE_FUTURE)
 
@@ -567,7 +564,7 @@ class SchleontinKitten:
         for i, card in enumerate(top_three):
             if card == CardType.EXPLODING_KITTEN:
                 self.next_kitten_index = i
-        self.placed_kitten_index = None  # neue Info → alte Platzierung verwerfen
+        self.placed_kitten_index = None
 
     def inform(self, state):
         deck_history = state.get("history_of_played_cards", [])
