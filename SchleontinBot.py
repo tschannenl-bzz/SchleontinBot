@@ -94,8 +94,10 @@ class Message:
         :return: None
         """
         try:
+            # Should be ready to read
             data = self._socket.recv(4096)
         except BlockingIOError:
+            # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
         else:
             if data:
@@ -142,11 +144,14 @@ class Message:
         if self._send_buffer:
             print(f'Sending {self._send_buffer!r} to {self._ipaddr}')
             try:
+                # Should be ready to write
                 sent = self._socket.send(self._send_buffer)
             except BlockingIOError:
+                # Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
                 self._send_buffer = self._send_buffer[sent:]
+                # Close when the buffer is drained. The response has been sent.
                 if type(self).__name__ == 'ServerMessage' and \
                         sent and \
                         not self._send_buffer:
@@ -229,6 +234,7 @@ class Message:
         except OSError as e:
             print(f'Error: socket.close() exception for {self._ipaddr}: {e!r}')
         finally:
+            # Delete reference to socket object for garbage collection
             self._socket = None
 
     @property
@@ -283,6 +289,7 @@ def json_decode(json_bytes, encoding):
     obj = json.load(text_io_wrap)
     text_io_wrap.close()
     return obj
+
 
 class Services:
     """
@@ -504,23 +511,21 @@ class SchleontinBot:
                 return "NONE"
         action = payload['action']
         if action == 'PLAY':
-            return self._bot.play()
+            self._bot.play()
         elif action == 'START ':
+            self._bot.start(payload)
             return 'ACK'
         elif action == 'DRAW':
-            self._bot.add_card(payload['card'])
-            return 'ACK'
+            return self._bot.add_card(payload['card'])
         elif action == 'INFORM':
             return self._bot.inform(payload)
         elif action == 'DEFUSE':
             decksize = len(payload['decksize'])
             pos = self._bot.defuse_action(decksize)
             return pos
-
         elif action == 'FUTURE':
-            self._bot.see_the_future(payload)
-            return 'ACK'
-        return None
+            return self._bot.see_the_future(payload)  # keine Karteninfos da
+        return "None"
 
 class SchleontinKitten:
     def __init__(self, name):
@@ -556,11 +561,14 @@ class SchleontinKitten:
                 if card in [CardType.SKIP, CardType.SHUFFLE]:
                     return card
 
-        return None
+    def start(self, payload):
+        self.name = payload['SchleontinKitten']
+        self.hand = payload['starting_hand']
 
-    def see_the_future(self, top_three: List[Card]) -> None:
-        self.top_three = top_three
+    def see_the_future(self, top_three: List[Card]):
+        self.top_three = []
         self.next_kitten_index = None
+
         for i, card in enumerate(top_three):
             if card == CardType.EXPLODING_KITTEN:
                 self.next_kitten_index = i
@@ -630,9 +638,9 @@ def swish_tail():
     try:
         while True:
             try:
-                msg = send_request({
+                message = send_request({
                     "action": "SWISH",
-                    "name": "SchleontinBot",
+                    "name": "SchleontinKitten",
                 })
                 time.sleep(10)
             except:
@@ -757,12 +765,6 @@ def start_connection(sel, host, port, request):
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     message = ClientMessage(sel, sock, addr, request)
     sel.register(sock, events, data=message)
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
